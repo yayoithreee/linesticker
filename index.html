@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>LINE スタンプ ショーケース</title>
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#FAFAFA;--card:#FFF;--text:#2D2D2D;--sub:#888;
+      --green:#06C755;--green-light:#E8F8EE;
+      --border:#EBEBEB;--r:12px;
+      --shadow:0 1px 4px rgba(0,0,0,.05);
+      --shadow-h:0 6px 20px rgba(0,0,0,.09);
+    }
+    body{font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.7;-webkit-font-smoothing:antialiased}
+
+    /* Header */
+    .hd{text-align:center;padding:44px 20px 28px;background:var(--card);border-bottom:1px solid var(--border)}
+    .hd-badge{display:inline-flex;align-items:center;justify-content:center;width:52px;height:52px;background:var(--green);border-radius:14px;margin-bottom:14px;color:#fff;font-size:24px}
+    .hd h1{font-size:21px;font-weight:700;letter-spacing:.02em}
+    .hd p{color:var(--sub);font-size:13px;margin-top:4px}
+
+    /* Loading */
+    .ld{text-align:center;padding:80px 20px;color:var(--sub);font-size:14px}
+    .sp{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:spin .6s linear infinite;margin:0 auto 14px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Container */
+    .ct{max-width:820px;margin:0 auto;padding:24px 16px 60px}
+    .count{font-size:13px;color:var(--sub);margin-bottom:20px;padding:0 4px}
+
+    /* Card */
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden;transition:box-shadow .2s}
+    .card:hover{box-shadow:var(--shadow-h)}
+
+    /* Header row */
+    .a-hd{display:flex;gap:14px;padding:18px 20px;border-bottom:1px solid var(--border);align-items:flex-start}
+    .a-info{flex:1;min-width:0}
+    .a-name{font-size:16px;font-weight:800;line-height:1.25}
+    .a-sub{margin-top:6px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+    .snsline{display:flex;flex-wrap:wrap;gap:10px;align-items:center;color:var(--sub);font-size:12px}
+    .snsname{font-weight:700;color:var(--sub)}
+    .snsline a{display:inline-flex;align-items:center;gap:4px;color:var(--sub);text-decoration:none}
+    .snsline a:hover{color:var(--text)}
+    .snsline svg{width:13px;height:13px}
+
+    .line-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;background:var(--green-light);border-radius:999px;font-size:12px;color:var(--green);font-weight:700;text-decoration:none;transition:background .15s}
+    .line-badge:hover{background:#d4f0dd}
+    .line-badge svg{width:14px;height:14px}
+
+    /* Anonymous Header */
+    .anon-hd{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+    .anon-dot{width:10px;height:10px;border-radius:50%;background:var(--border);flex-shrink:0}
+    .anon-label{font-size:13px;color:var(--sub);font-weight:700}
+
+    /* Stamp Grid */
+    .s-grid{padding:16px 20px 20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+    .s-item{display:flex;flex-direction:column;align-items:center;text-decoration:none;color:var(--text);transition:transform .15s}
+    .s-item:hover{transform:translateY(-2px)}
+    .s-img{width:100%;aspect-ratio:1;border-radius:12px;object-fit:cover;background:var(--green-light);border:1px solid var(--border)}
+    .s-name{font-size:12px;margin-top:8px;text-align:center;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .s-btn{display:inline-flex;align-items:center;gap:4px;margin-top:8px;padding:6px 16px;background:var(--green);color:#fff;border-radius:18px;font-size:11px;font-weight:800;white-space:nowrap;transition:opacity .15s}
+    .s-btn:hover{opacity:.85}
+
+    /* Empty */
+    .empty{text-align:center;padding:80px 20px;color:var(--sub)}
+    .empty .em{font-size:40px;margin-bottom:12px}
+    .empty p{font-size:14px}
+
+    /* Footer */
+    .ft{text-align:center;padding:20px;font-size:11px;color:#bbb}
+
+    @media(max-width:480px){
+      .hd{padding:32px 16px 22px}
+      .hd h1{font-size:18px}
+      .a-hd{padding:14px 16px}
+      .s-grid{padding:14px 16px 18px;grid-template-columns:repeat(auto-fill,minmax(125px,1fr));gap:10px}
+      .s-btn{padding:5px 12px;font-size:10px}
+    }
+  </style>
+</head>
+<body>
+  <header class="hd">
+    <div class="hd-badge">♥</div>
+    <h1>LINE スタンプ ショーケース</h1>
+    <p>クリエイターたちのオリジナルスタンプ一覧</p>
+  </header>
+
+  <main class="ct">
+    <div id="app">
+      <div class="ld"><div class="sp"></div>読み込み中…</div>
+    </div>
+  </main>
+
+  <footer class="ft" id="ft" style="display:none"></footer>
+
+  <!-- icons -->
+  <svg style="display:none">
+    <symbol id="ix" viewBox="0 0 24 24"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></symbol>
+    <symbol id="ith" viewBox="0 0 192 192"><path fill="currentColor" d="M141.537 88.988a66.667 66.667 0 0 0-2.518-1.143c-1.482-27.307-16.403-42.94-41.457-43.1h-.34c-14.986 0-27.449 6.396-35.12 18.036l13.779 9.452c5.73-8.695 14.724-10.548 21.348-10.548h.229c8.249.053 14.474 2.452 18.503 7.129 2.932 3.405 4.893 8.111 5.864 14.05a71.16 71.16 0 0 0-24.336-2.265c-28.238 1.665-46.378 18.062-45.093 40.83.644 11.478 6.296 21.373 15.9 27.838 8.112 5.467 18.575 8.093 29.466 7.411 14.362-.9 25.618-6.39 33.459-16.317 5.96-7.548 9.773-17.158 11.456-28.906 6.862 4.074 11.958 9.456 14.784 16.139 4.794 11.337 5.072 29.944-10.32 45.341-13.504 13.5-29.728 19.338-54.253 19.555-27.18-.241-47.746-8.932-61.153-25.825C18.32 152.247 11.172 131.006 10.934 105.999c.238-25.006 7.386-46.248 21.242-63.1C45.58 26.027 66.147 17.336 93.326 17.095c27.406.244 48.348 9.027 62.267 26.117 6.817 8.376 11.869 18.587 15.088 30.32l16.647-4.45c-3.741-13.652-9.788-25.627-18.133-35.88C152.452 12.907 127.356 2.296 93.261 2.013h-.13C60.064 2.296 35.378 12.812 19.025 33.046 4.43 51.098-3.49 75.408-3.778 105.94l-.005.104.005.107c.288 30.53 8.2 54.84 23.526 72.267 16.399 18.66 40.677 30.413 72.177 34.969a124.099 124.099 0 0 0 1.399.16l.134.013c27.894.772 49.647-7.085 66.425-24.014 21.62-21.796 20.595-48.69 13.49-65.48-5.106-12.074-14.62-21.889-27.436-28.078Z"/></symbol>
+    <symbol id="iline" viewBox="0 0 24 24"><path fill="currentColor" d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63h2.386c.349 0 .63.285.63.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.271.173-.508.43-.595.066-.022.137-.033.194-.033.195 0 .375.104.515.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.627-.63.349 0 .631.285.631.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></symbol>
+  </svg>
+
+  <script>
+    // ★ここだけ差し替え（あなたのGAS JSON URL）
+    const GAS_JSON_URL = "PASTE_YOUR_GAS_URL_HERE"; 
+    // 例: "https://script.google.com/macros/s/AKfycbXXXX/exec?format=json"
+
+    function esc(s){
+      return s ? String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;').replace(/'/g,'&#39;') : '';
+    }
+
+    function normalizeUrl(u){
+      if(!u) return '';
+      const s = String(u).trim();
+      if(!s || s === '[URL]') return '';
+      return s;
+    }
+
+    function mergeAuthors(authors){
+      // 念のためクライアント側でも「同一作者名」を結合する
+      const map = new Map();
+      for(const a of (authors || [])){
+        const creatorName = (a.creatorName || '').trim();
+        const creatorUrl  = normalizeUrl(a.creatorUrl);
+        const snsName     = (a.snsName || '').trim();
+        const xUrl        = normalizeUrl(a.xUrl);
+        const threadsUrl  = normalizeUrl(a.threadsUrl);
+        const isAnonymous = !!a.isAnonymous || !creatorName;
+
+        const key = (creatorName || '__anon__') + '|' + (creatorUrl || '');
+        if(!map.has(key)){
+          map.set(key, {
+            creatorName,
+            creatorUrl,
+            snsName,
+            xUrl,
+            threadsUrl,
+            isAnonymous,
+            stamps: []
+          });
+        }
+        const dst = map.get(key);
+        // 補完
+        if(!dst.creatorUrl && creatorUrl) dst.creatorUrl = creatorUrl;
+        if(!dst.snsName && snsName) dst.snsName = snsName;
+        if(!dst.xUrl && xUrl) dst.xUrl = xUrl;
+        if(!dst.threadsUrl && threadsUrl) dst.threadsUrl = threadsUrl;
+        dst.isAnonymous = dst.isAnonymous && !dst.creatorName;
+
+        // stamps
+        for(const s of (a.stamps || [])){
+          const url = normalizeUrl(s.url);
+          if(!url) continue;
+          dst.stamps.push({
+            name: (s.name || 'スタンプ').trim(),
+            url,
+            image: normalizeUrl(s.image)
+          });
+        }
+      }
+
+      const arr = Array.from(map.values());
+      // ソート：作者あり→名前順、匿名→末尾
+      arr.sort((a,b)=>{
+        if(a.isAnonymous !== b.isAnonymous) return a.isAnonymous ? 1 : -1;
+        return (a.creatorName || '').localeCompare(b.creatorName || '', 'ja');
+      });
+      return arr;
+    }
+
+    function render(data){
+      const app = document.getElementById('app');
+      const ft  = document.getElementById('ft');
+
+      const authorsRaw = data && data.authors ? data.authors : [];
+      const authors = mergeAuthors(authorsRaw);
+
+      if(!authors.length){
+        app.innerHTML = '<div class="empty"><div class="em">📭</div><p>まだスタンプが登録されていません</p></div>';
+        return;
+      }
+
+      const totalStamps = authors.reduce((sum,a)=> sum + (a.stamps ? a.stamps.length : 0), 0);
+      const namedCreators = authors.filter(a=>!a.isAnonymous).length;
+
+      let h = '<div class="count">'+ namedCreators +' 名のクリエイター / '+ totalStamps +' 個のスタンプ</div>';
+
+      for(const a of authors){
+        h += '<section class="card">';
+
+        if(a.isAnonymous){
+          h += '<div class="anon-hd"><div class="anon-dot"></div><div class="anon-label">クリエイター（'+ (a.stamps?.length || 0) +'個のスタンプ）</div></div>';
+        }else{
+          h += '<div class="a-hd"><div class="a-info">';
+          // メイン：スタンプ作者名
+          h += '<div class="a-name">'+ esc(a.creatorName) +'</div>';
+
+          h += '<div class="a-sub">';
+
+          // LINE クリエイターURL（あればバッジで）
+          if(a.creatorUrl){
+            h += '<a class="line-badge" href="'+ esc(a.creatorUrl) +'" target="_blank" rel="noopener">'
+              + '<svg><use href="#iline"/></svg>'
+              + 'LINE クリエイター'
+              + '</a>';
+          }
+
+          // SNS行（SNS名 / X / Threads）
+          const snsName = (a.snsName || '').trim();
+          const xUrl = normalizeUrl(a.xUrl);
+          const thUrl = normalizeUrl(a.threadsUrl);
+
+          if(snsName || xUrl || thUrl){
+            h += '<div class="snsline">';
+            if(snsName) h += '<span class="snsname">'+ esc(snsName) +'</span>';
+            if(xUrl) h += '<a href="'+ esc(xUrl) +'" target="_blank" rel="noopener"><svg><use href="#ix"/></svg>X</a>';
+            if(thUrl) h += '<a href="'+ esc(thUrl) +'" target="_blank" rel="noopener"><svg><use href="#ith"/></svg>Threads</a>';
+            h += '</div>';
+          }
+
+          h += '</div></div></div>';
+        }
+
+        // stamps
+        h += '<div class="s-grid">';
+        for(const s of (a.stamps || [])){
+          h += '<a class="s-item" href="'+ esc(s.url) +'" target="_blank" rel="noopener">';
+          if(s.image){
+            h += '<img class="s-img" src="'+ esc(s.image) +'" alt="'+ esc(s.name) +'" loading="lazy">';
+          }else{
+            h += '<div class="s-img" style="display:flex;align-items:center;justify-content:center;font-size:12px;color:#aaa">No Image</div>';
+          }
+          h += '<div class="s-name">'+ esc(s.name) +'</div>';
+          h += '<div class="s-btn">購入する</div>';
+          h += '</a>';
+        }
+        h += '</div></section>';
+      }
+
+      app.innerHTML = h;
+
+      // footer updated
+      const last = data && data.lastUpdated ? data.lastUpdated : '';
+      if(last){
+        const t = new Date(last);
+        ft.textContent = '最終更新: ' + t.toLocaleDateString('ja-JP') + ' ' + t.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit'});
+        ft.style.display = 'block';
+      }
+    }
+
+    function showError(err){
+      console.error(err);
+      document.getElementById('app').innerHTML =
+        '<div class="empty"><div class="em">⚠️</div><p>データの取得に失敗しました。<br>URLと公開設定（GASのアクセス権）を確認してください。</p></div>';
+    }
+
+    async function boot(){
+      if(!GAS_JSON_URL || GAS_JSON_URL.includes("PASTE_YOUR_GAS_URL_HERE")){
+        document.getElementById('app').innerHTML =
+          '<div class="empty"><div class="em">🛠️</div><p>index.html 内の <b>GAS_JSON_URL</b> を<br>あなたの <b>.../exec?format=json</b> に置き換えてください。</p></div>';
+        return;
+      }
+      try{
+        // キャッシュ回避
+        const u = new URL(GAS_JSON_URL);
+        u.searchParams.set('nocache', String(Date.now()));
+        const res = await fetch(u.toString(), { cache: "no-store" });
+        if(!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        render(data);
+      }catch(e){
+        showError(e);
+      }
+    }
+
+    boot();
+  </script>
+</body>
+</html>
