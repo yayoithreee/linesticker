@@ -17,6 +17,9 @@ button:hover{background:#f0f0f0}
 button.active{background:#06C755;color:#fff;border-color:#06C755}
 input{padding:8px 12px;border:1px solid #ccc;border-radius:6px;font-size:14px;min-width:180px}
 
+.btn-tool{padding:8px 18px;border:1px solid #06C755;border-radius:6px;background:#fff;color:#06C755;cursor:pointer;font-size:14px;font-weight:bold;text-decoration:none;transition:.2s;display:inline-block;margin-left:8px}
+.btn-tool:hover{background:#06C755;color:#fff}
+
 main{max-width:1100px;margin:0 auto;padding:20px}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
@@ -25,7 +28,6 @@ main{max-width:1100px;margin:0 auto;padding:20px}
 .stamp-card img{width:100%;border-radius:10px;display:block}
 .stamp-card .stamp-name{font-size:12px;margin-top:6px;color:#555}
 
-/* 作者別セクション */
 .author-section{background:#fff;border:1px solid #eee;border-radius:10px;padding:20px;margin-bottom:24px}
 .author-header{margin-bottom:14px}
 .author-name{font-weight:bold;font-size:16px}
@@ -47,6 +49,7 @@ main{max-width:1100px;margin:0 auto;padding:20px}
 <button id="allBtn">すべて</button>
 <button id="authorBtn">作者別</button>
 <input type="text" id="searchInput" placeholder="スタンプ名・作者名で検索">
+<a class="btn-tool" href="https://note.com/preview/nd4c938b85942?prev_access_key=d8b53e17d2c499cbf767a5e63aeecaca" target="_blank">切り出しくん</a>
 </div>
 </header>
 
@@ -93,15 +96,11 @@ function init(){
   };
 }
 
-/* ========================================
-   描画
-======================================== */
 function render(){
   if(!globalData) return;
 
   let authors = globalData.authors;
 
-  /* --- 検索フィルタ --- */
   if(currentSearch){
     const q = currentSearch.toLowerCase();
     authors = authors.map(a => {
@@ -118,7 +117,6 @@ function render(){
 
   let html = "";
 
-  /* ================== すべて表示 ================== */
   if(currentView === "all"){
 
     html += '<div class="grid">';
@@ -134,13 +132,11 @@ function render(){
     }
   }
 
-  /* ================== 作者別表示 ================== */
   if(currentView === "author"){
 
     const named = authors.filter(a => !a.isAnonymous);
     const anon  = authors.filter(a => a.isAnonymous);
 
-    /* 名前あり → 作者セクション */
     named.forEach(a => {
       html += '<div class="author-section">';
       html += '<div class="author-header">';
@@ -173,7 +169,6 @@ function render(){
       html += '</div>';
     });
 
-    /* 名前なし → 見出しなし、フラットなグリッド */
     if(anon.length){
       const anonStamps = [];
       anon.forEach(a => {
@@ -200,9 +195,6 @@ function render(){
   document.getElementById("authorBtn").classList.toggle("active", currentView === "author");
 }
 
-/* ========================================
-   スタンプカード
-======================================== */
 function stampCardHTML(stamp){
   return '<div class="stamp-card">' +
     '<a href="' + stamp.url + '" target="_blank">' +
@@ -212,7 +204,6 @@ function stampCardHTML(stamp){
   '</div>';
 }
 
-/* HTMLエスケープ */
 function esc(str){
   if(!str) return "";
   return str.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
