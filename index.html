@@ -1,164 +1,118 @@
-<!doctype html>
-<html lang="ja">
+<!DOCTYPE html>
+<html>
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LINE スタンプ ショーケース</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{font-family:sans-serif;background:#fafafa;margin:0}
-header{background:#fff;padding:20px;border-bottom:1px solid #eee}
-h1{margin:0;font-size:20px}
-.controls{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
-button{padding:6px 12px;border-radius:20px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:12px}
-button.active{background:#06C755;color:#fff;border:none}
-input{padding:6px 10px;border-radius:20px;border:1px solid #ddd;font-size:12px}
-
-main{max-width:1000px;margin:0 auto;padding:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px}
-.card{background:#fff;border:1px solid #eee;border-radius:12px;padding:16px;margin-bottom:20px}
-.author-name{font-weight:bold;margin-bottom:10px;cursor:pointer}
-.stamp{text-align:center}
-.stamp img{width:100%;border-radius:10px}
-.stamp-name{font-size:12px;margin-top:6px}
-.btn{display:inline-block;margin-top:6px;padding:5px 12px;background:#06C755;color:#fff;border-radius:16px;font-size:11px;text-decoration:none}
-.small{font-size:12px;color:#888;margin-bottom:10px}
+body { font-family: sans-serif; margin:20px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:20px; }
+.card { border:1px solid #ddd; padding:10px; }
+img { width:100%; }
+.author-links { font-size:12px; margin-bottom:15px; }
+input { width:100%; padding:6px; margin:15px 0; }
+button { margin-right:10px; }
 </style>
 </head>
-
 <body>
 
-<header>
-<h1>LINE スタンプ ショーケース</h1>
+<h2>LINEスタンプ一覧</h2>
 
-<div class="controls">
-<button id="allBtn">すべて</button>
-<button id="authorBtn">作者別</button>
-<input type="text" id="searchInput" placeholder="検索（作者名・スタンプ名）">
-</div>
-</header>
+<button onclick="setView('all')">すべて</button>
+<button onclick="setView('author')">作者別</button>
 
-<main>
-<div id="app">読み込み中...</div>
-</main>
+<input type="text" id="search" placeholder="検索">
+
+<div id="authorInfo"></div>
+<div id="app"></div>
 
 <script>
 
-const GAS_JSON_URL = "https://script.google.com/macros/s/AKfycbzjumzsSjuuAHV02Mvf2L3YaksqxQfgFGQwdKIFz4T0kRQaqnvyM4XjNqEVCRznjBkmyA/exec?format=json";
+let allItems = [];
+let currentView = "all";
 
-let globalData=null;
-let currentView="all";
-let currentAuthor=null;
-let currentSearch="";
-
-init();
+google.script.run.withSuccessHandler(data=>{
+  allItems = data;
+  init();
+}).getData();
 
 function init(){
-  const params=new URLSearchParams(window.location.search);
-  currentView=params.get("view")||"all";
-  currentAuthor=params.get("author");
-  currentSearch=params.get("q")||"";
+  const params = new URLSearchParams(window.location.search);
+  currentView = params.get("view") || "all";
+  const author = params.get("author");
 
-  document.getElementById("searchInput").value=currentSearch;
-
-  fetch(GAS_JSON_URL)
-  .then(res=>res.json())
-  .then(data=>{
-    globalData=data;
-    render();
-  });
-
-  document.getElementById("allBtn").onclick=()=>{
-    updateURL({view:"all",author:null});
-  };
-
-  document.getElementById("authorBtn").onclick=()=>{
-    updateURL({view:"author"});
-  };
-
-  document.getElementById("searchInput").oninput=(e)=>{
-    updateURL({q:e.target.value});
-  };
+  if(author){
+    showAuthor(author);
+  } else {
+    render(allItems);
+  }
 }
 
-function updateURL(params){
-  const url=new URL(window.location);
-  Object.keys(params).forEach(key=>{
-    if(params[key]===null||params[key]===""){
-      url.searchParams.delete(key);
-    }else{
-      url.searchParams.set(key,params[key]);
-    }
-  });
-  window.location=url;
+function setView(view){
+  const url = new URL(window.location);
+  url.searchParams.set("view", view);
+  url.searchParams.delete("author");
+  window.location = url;
 }
 
-function render(){
-  if(!globalData)return;
-  const app=document.getElementById("app");
-  let html="";
-
-  let authors=globalData.authors;
-
-  // フィルター（作者指定）
-  if(currentAuthor){
-    authors=authors.filter(a=>a.creatorName===currentAuthor);
-  }
-
-  // 検索
-  if(currentSearch){
-    const q=currentSearch.toLowerCase();
-    authors=authors.map(a=>{
-      const stamps=a.stamps.filter(s=>
-        (a.creatorName||"").toLowerCase().includes(q) ||
-        (s.name||"").toLowerCase().includes(q)
-      );
-      return {...a,stamps};
-    }).filter(a=>a.stamps.length>0);
-  }
-
-  if(currentView==="all"){
-    html+=`<div class="small">最新順（上が新しい）</div>`;
-    html+=`<div class="grid">`;
-    authors.forEach(a=>{
-      a.stamps.forEach(s=>{
-        html+=stampHTML(s,a.creatorName);
-      });
-    });
-    html+=`</div>`;
-  }
-
-  if(currentView==="author"){
-    authors.forEach(a=>{
-      html+=`
-      <div class="card">
-        <div class="author-name" onclick="updateURL({view:'author',author:'${a.creatorName}'})">
-          ${a.creatorName||"匿名"}
-        </div>
-        <div class="grid">
-      `;
-      a.stamps.forEach(s=>{
-        html+=stampHTML(s,a.creatorName);
-      });
-      html+=`</div></div>`;
-    });
-  }
-
-  app.innerHTML=html;
-
-  document.getElementById("allBtn").classList.toggle("active",currentView==="all");
-  document.getElementById("authorBtn").classList.toggle("active",currentView==="author");
+function render(data){
+  const app = document.getElementById("app");
+  app.innerHTML = '<div class="grid">' +
+    data.map(item => cardHTML(item)).join("") +
+    '</div>';
 }
 
-function stampHTML(stamp,author){
+function cardHTML(item){
+  const safeUrl = item.url ? item.url.trim() : "#";
   return `
-  <div class="stamp">
-    <img src="${stamp.image||""}">
-    <div class="stamp-name">${stamp.name||""}</div>
-    ${stamp.url?`<a class="btn" href="${stamp.url}" target="_blank">購入</a>`:""}
-  </div>
+    <div class="card">
+      <a href="${encodeURI(safeUrl)}" target="_blank">
+        <img src="https://stickershop.line-scdn.net/stickershop/v1/product/${extractId(safeUrl)}/LINEStorePC/main.png">
+      </a>
+      <div>${item.title || ""}</div>
+      <div style="color:blue;cursor:pointer" onclick="showAuthor('${item.author}')">
+        ${item.author}
+      </div>
+    </div>
   `;
 }
+
+function extractId(url){
+  const match = url.match(/product\/(\d+)/);
+  if(match) return match[1];
+
+  const match2 = url.match(/sticker\/(\d+)/);
+  if(match2) return match2[1];
+
+  return "";
+}
+
+function showAuthor(name){
+  const filtered = allItems.filter(i=>i.author===name);
+  render(filtered);
+
+  const info = filtered[0];
+
+  document.getElementById("authorInfo").innerHTML = `
+    <div class="author-links">
+      <a href="${info.lineCreatorUrl}" target="_blank">LINE</a> |
+      ${info.snsName || ""} |
+      <a href="${info.xUrl}" target="_blank">X</a> |
+      <a href="${info.threadsUrl}" target="_blank">Threads</a>
+    </div>
+  `;
+
+  const url = new URL(window.location);
+  url.searchParams.set("author", name);
+  window.history.pushState({}, "", url);
+}
+
+document.getElementById("search").addEventListener("input", e=>{
+  const q = e.target.value.toLowerCase();
+  const filtered = allItems.filter(i =>
+    (i.title || "").toLowerCase().includes(q) ||
+    (i.author || "").toLowerCase().includes(q)
+  );
+  render(filtered);
+});
 
 </script>
 </body>
