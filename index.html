@@ -1,118 +1,191 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="ja">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LINEスタンプ一覧</title>
+
 <style>
-body { font-family: sans-serif; margin:20px; }
-.grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:20px; }
-.card { border:1px solid #ddd; padding:10px; }
-img { width:100%; }
-.author-links { font-size:12px; margin-bottom:15px; }
-input { width:100%; padding:6px; margin:15px 0; }
-button { margin-right:10px; }
+body{font-family:sans-serif;margin:0;background:#fafafa}
+header{padding:20px;background:#fff;border-bottom:1px solid #eee}
+h1{margin:0 0 10px}
+.controls{display:flex;gap:10px;flex-wrap:wrap}
+button{padding:6px 14px;border:1px solid #ccc;background:#fff;cursor:pointer}
+button.active{background:#06C755;color:#fff;border:none}
+input{padding:6px 10px;border:1px solid #ccc}
+
+main{max-width:1100px;margin:0 auto;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:20px}
+.card{background:#fff;border:1px solid #eee;padding:15px}
+.card img{width:100%;border-radius:10px}
+.author-name{font-weight:bold;margin-bottom:5px}
+.small{font-size:12px;color:#666;margin-bottom:10px}
+.small a{color:#666;text-decoration:none;margin-right:8px}
 </style>
 </head>
+
 <body>
 
-<h2>LINEスタンプ一覧</h2>
+<header>
+<h1>LINEスタンプ一覧</h1>
 
-<button onclick="setView('all')">すべて</button>
-<button onclick="setView('author')">作者別</button>
+<div class="controls">
+<button id="allBtn">すべて</button>
+<button id="authorBtn">作者別</button>
+<input type="text" id="searchInput" placeholder="検索">
+</div>
+</header>
 
-<input type="text" id="search" placeholder="検索">
-
-<div id="authorInfo"></div>
-<div id="app"></div>
+<main>
+<div id="app">読み込み中...</div>
+</main>
 
 <script>
 
-let allItems = [];
-let currentView = "all";
+const GAS_JSON_URL = "https://script.google.com/macros/s/AKfycbzjumzsSjuuAHV02Mvf2L3YaksqxQfgFGQwdKIFz4T0kRQaqnvyM4XjNqEVCRznjBkmyA/exec?format=json";
 
-google.script.run.withSuccessHandler(data=>{
-  allItems = data;
-  init();
-}).getData();
+let globalData=null;
+let currentView="all";
+let currentAuthor=null;
+let currentSearch="";
+
+init();
+
+/* ============================= */
 
 function init(){
-  const params = new URLSearchParams(window.location.search);
-  currentView = params.get("view") || "all";
-  const author = params.get("author");
 
-  if(author){
-    showAuthor(author);
-  } else {
-    render(allItems);
+  const params=new URLSearchParams(window.location.search);
+  currentView=params.get("view")||"all";
+  currentAuthor=params.get("author");
+  currentSearch=params.get("q")||"";
+
+  document.getElementById("searchInput").value=currentSearch;
+
+  fetch(GAS_JSON_URL)
+  .then(res=>res.json())
+  .then(data=>{
+    globalData=data;
+    render();
+  });
+
+  document.getElementById("allBtn").onclick=()=>{
+    const url=new URL(window.location);
+    url.searchParams.set("view","all");
+    url.searchParams.delete("author");
+    window.location=url;
+  };
+
+  document.getElementById("authorBtn").onclick=()=>{
+    const url=new URL(window.location);
+    url.searchParams.set("view","author");
+    url.searchParams.delete("author");
+    window.location=url;
+  };
+
+  document.getElementById("searchInput").oninput=(e)=>{
+    const url=new URL(window.location);
+    if(e.target.value){
+      url.searchParams.set("q",e.target.value);
+    }else{
+      url.searchParams.delete("q");
+    }
+    window.history.replaceState({}, "", url);
+    currentSearch=e.target.value;
+    render();
+  };
+}
+
+/* ============================= */
+
+function render(){
+  if(!globalData)return;
+
+  let authors=globalData.authors;
+
+  /* 検索 */
+  if(currentSearch){
+    const q=currentSearch.toLowerCase();
+    authors=authors.map(a=>{
+      const stamps=a.stamps.filter(s=>
+        (a.creatorName||"").toLowerCase().includes(q) ||
+        (s.name||"").toLowerCase().includes(q)
+      );
+      return {...a,stamps};
+    }).filter(a=>a.stamps.length>0);
   }
+
+  /* 特定作者表示 */
+  if(currentAuthor){
+    authors=authors.filter(a=>a.creatorName===currentAuthor);
+  }
+
+  let html="";
+
+  /* ================== すべて表示 ================== */
+  if(currentView==="all" || !currentView){
+
+    html+=`<div class="grid">`;
+
+    authors.forEach(a=>{
+      a.stamps.forEach(s=>{
+        html+=stampHTML(s);
+      });
+    });
+
+    html+=`</div>`;
+  }
+
+  /* ================== 作者別表示 ================== */
+  if(currentView==="author"){
+
+    authors.forEach(a=>{
+
+      html+=`
+      <div class="card">
+
+        <div class="author-name">
+          ${a.creatorUrl
+            ? `<a href="${a.creatorUrl}" target="_blank">${a.creatorName||""}</a>`
+            : (a.creatorName||"")
+          }
+        </div>
+
+        <div class="small">
+          ${a.snsName||""}
+          ${a.xUrl ? ` | <a href="${a.xUrl}" target="_blank">X</a>`:""}
+          ${a.threadsUrl ? ` | <a href="${a.threadsUrl}" target="_blank">Threads</a>`:""}
+        </div>
+
+        <div class="grid">
+      `;
+
+      a.stamps.forEach(s=>{
+        html+=stampHTML(s);
+      });
+
+      html+=`</div></div>`;
+    });
+  }
+
+  document.getElementById("app").innerHTML=html;
+
+  document.getElementById("allBtn").classList.toggle("active",currentView==="all");
+  document.getElementById("authorBtn").classList.toggle("active",currentView==="author");
 }
 
-function setView(view){
-  const url = new URL(window.location);
-  url.searchParams.set("view", view);
-  url.searchParams.delete("author");
-  window.location = url;
-}
+/* ============================= */
 
-function render(data){
-  const app = document.getElementById("app");
-  app.innerHTML = '<div class="grid">' +
-    data.map(item => cardHTML(item)).join("") +
-    '</div>';
-}
-
-function cardHTML(item){
-  const safeUrl = item.url ? item.url.trim() : "#";
+function stampHTML(stamp){
   return `
-    <div class="card">
-      <a href="${encodeURI(safeUrl)}" target="_blank">
-        <img src="https://stickershop.line-scdn.net/stickershop/v1/product/${extractId(safeUrl)}/LINEStorePC/main.png">
-      </a>
-      <div>${item.title || ""}</div>
-      <div style="color:blue;cursor:pointer" onclick="showAuthor('${item.author}')">
-        ${item.author}
-      </div>
-    </div>
+  <div>
+    <a href="${stamp.url}" target="_blank">
+      <img src="${stamp.image||""}">
+    </a>
+    <div style="font-size:12px;margin-top:6px">${stamp.name||""}</div>
+  </div>
   `;
 }
-
-function extractId(url){
-  const match = url.match(/product\/(\d+)/);
-  if(match) return match[1];
-
-  const match2 = url.match(/sticker\/(\d+)/);
-  if(match2) return match2[1];
-
-  return "";
-}
-
-function showAuthor(name){
-  const filtered = allItems.filter(i=>i.author===name);
-  render(filtered);
-
-  const info = filtered[0];
-
-  document.getElementById("authorInfo").innerHTML = `
-    <div class="author-links">
-      <a href="${info.lineCreatorUrl}" target="_blank">LINE</a> |
-      ${info.snsName || ""} |
-      <a href="${info.xUrl}" target="_blank">X</a> |
-      <a href="${info.threadsUrl}" target="_blank">Threads</a>
-    </div>
-  `;
-
-  const url = new URL(window.location);
-  url.searchParams.set("author", name);
-  window.history.pushState({}, "", url);
-}
-
-document.getElementById("search").addEventListener("input", e=>{
-  const q = e.target.value.toLowerCase();
-  const filtered = allItems.filter(i =>
-    (i.title || "").toLowerCase().includes(q) ||
-    (i.author || "").toLowerCase().includes(q)
-  );
-  render(filtered);
-});
 
 </script>
 </body>
